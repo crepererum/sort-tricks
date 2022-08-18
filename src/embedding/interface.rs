@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
 mod sealed {
-    pub trait FixedSizeSealed {}
+    pub trait Sealed {}
 
-    impl<T, const N: usize> FixedSizeSealed for super::FixedSizeEmbedding<T, N> {}
+    impl<T, const N: usize> Sealed for super::FixedSizeEmbedding<T, N> {}
 }
 
-pub trait FixedSize {
-    type T: sealed::FixedSizeSealed;
+pub trait FixedSize: Into<Self::T> + From<Self::T> {
+    type T: sealed::Sealed;
 }
 
 #[macro_export]
