@@ -39,6 +39,43 @@ impl From<FixedSizeEmbedding<char, 4>> for char {
 
 impl_fixed_type!(char, 4);
 
+// ==================== floats ====================
+
+#[cfg(any(test, feature = "ordered-float"))]
+mod floats {
+    use super::*;
+    use ordered_float::OrderedFloat;
+
+    macro_rules! impl_float {
+        ($t:ty, $n:expr, $ti:ty, $tu:ty, $shift:expr) => {
+            impl From<OrderedFloat<$t>> for FixedSizeEmbedding<OrderedFloat<$t>, $n> {
+                fn from(val: OrderedFloat<$t>) -> Self {
+                    // See https://github.com/rust-lang/rust/blob/9c20b2a8cc7588decb6de25ac6a7912dcef24d65/library/core/src/num/f32.rs#L1176-L1260
+                    let mut i = val.to_bits() as $ti;
+                    i ^= (((i >> $shift) as $tu) >> 1) as $ti;
+                    let e: FixedSizeEmbedding<$ti, $n> = i.into();
+                    Self::new(e.into_data())
+                }
+            }
+
+            impl From<FixedSizeEmbedding<OrderedFloat<$t>, $n>> for OrderedFloat<$t> {
+                fn from(embedding: FixedSizeEmbedding<OrderedFloat<$t>, $n>) -> Self {
+                    // See https://github.com/rust-lang/rust/blob/9c20b2a8cc7588decb6de25ac6a7912dcef24d65/library/core/src/num/f32.rs#L1176-L1260
+                    let mut i: $ti =
+                        FixedSizeEmbedding::<$ti, $n>::new(embedding.into_data()).into();
+                    i ^= (((i >> $shift) as $tu) >> 1) as $ti;
+                    OrderedFloat(<$t>::from_bits(i as $tu))
+                }
+            }
+
+            impl_fixed_type!(OrderedFloat<$t>, $n);
+        };
+    }
+
+    impl_float!(f32, 4, i32, u32, 31);
+    impl_float!(f64, 8, i64, u64, 63);
+}
+
 // ==================== signed integers ====================
 
 macro_rules! impl_signed_integer {
@@ -100,12 +137,19 @@ impl_unsigned_integer!(u128, 16);
 #[cfg(test)]
 mod tests {
     use crate::{test_embedding_roundtrip, test_embedding_sorting};
+    use ordered_float::OrderedFloat;
 
     test_embedding_roundtrip!(bool, test_bool_roundtrip);
     test_embedding_sorting!(bool, test_bool_sorting);
 
     test_embedding_roundtrip!(char, test_char_roundtrip);
     test_embedding_sorting!(char, test_char_sorting);
+
+    test_embedding_roundtrip!(OrderedFloat<f32>, test_f32_roundtrip);
+    test_embedding_sorting!(OrderedFloat<f32>, test_f32_sorting);
+
+    test_embedding_roundtrip!(OrderedFloat<f64>, test_f64_roundtrip);
+    test_embedding_sorting!(OrderedFloat<f64>, test_f64_sorting);
 
     test_embedding_roundtrip!(i8, test_i8_roundtrip);
     test_embedding_sorting!(i8, test_i8_sorting);

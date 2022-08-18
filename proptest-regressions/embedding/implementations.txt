@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 58f8520718095c1e2a1e0617928c0e86936dfe024b2bc20a152ebd0712fdfa3b # shrinks to input = [OrderedFloat(-5.748496e-39), OrderedFloat(0.0)]
+cc 56facba443ca2aa1eb2ba6db00f53e00b15aa782339fb45f2c3d1391fd3464bf # shrinks to orig = OrderedFloat(-1.8305445e24)
