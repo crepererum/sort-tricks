@@ -43,3 +43,38 @@ impl<T, const N: usize> FixedSizeEmbedding<T, N> {
         self.data
     }
 }
+
+pub trait VariableSize:
+    Into<VariableSizeEmbedding<Self>> + From<VariableSizeEmbedding<Self>>
+{
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct VariableSizeEmbedding<T> {
+    data: Vec<u8>,
+    _type: PhantomData<T>,
+}
+
+impl<T> VariableSizeEmbedding<T> {
+    pub fn new(mut data: Vec<u8>) -> Self {
+        data.shrink_to_fit();
+        Self {
+            data,
+            _type: PhantomData::default(),
+        }
+    }
+    pub fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    pub fn into_data(self) -> Vec<u8> {
+        self.data
+    }
+}
+
+#[macro_export]
+macro_rules! impl_variable_type {
+    ($t:ty) => {
+        impl VariableSize for $t {}
+    };
+}
